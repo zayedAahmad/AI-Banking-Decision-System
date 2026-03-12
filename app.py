@@ -2,47 +2,71 @@ import streamlit as st
 import pandas as pd
 import joblib
 
-# Load trained model
+# Load model and helpers
 model = joblib.load("models/loan_approval_model.pkl")
+model_columns = joblib.load("models/model_columns.pkl")
+label_encoders = joblib.load("models/label_encoders.pkl")
 
-# Page settings
-st.set_page_config(page_title="AI Banking Decision System", layout="centered")
+st.set_page_config(page_title="AI Loan Prediction System", layout="wide")
 
-# Title
-st.title("AI Banking Decision System")
-st.write("Enter customer financial data to predict loan approval.")
+st.title("AI Loan Prediction System")
+st.write("Predict loan approval using machine learning.")
 
-# User inputs
-age = st.number_input("Age", min_value=18, max_value=100, value=30)
-income = st.number_input("Monthly Income", min_value=0.0, value=3000.0)
-loan_amount = st.number_input("Loan Amount", min_value=0.0, value=10000.0)
-credit_score = st.number_input("Credit Score", min_value=300, max_value=850, value=650)
-employment_years = st.number_input("Employment Years", min_value=0.0, value=3.0)
-existing_debt = st.number_input("Existing Debt", min_value=0.0, value=2000.0)
-loan_term = st.number_input("Loan Term (months)", min_value=1, value=24)
-risk_level = st.slider("Risk Level", min_value=0.0, max_value=1.0, value=0.3, step=0.01)
+st.divider()
 
-# Prediction button
-if st.button("Predict Decision"):
+col1, col2 = st.columns(2)
+
+with col1:
+    Gender = st.selectbox("Gender", ["Male", "Female"])
+    Married = st.selectbox("Married", ["Yes", "No"])
+    Dependents = st.selectbox("Dependents", ["0", "1", "2", "3+"])
+    Education = st.selectbox("Education", ["Graduate", "Not Graduate"])
+    Self_Employed = st.selectbox("Self Employed", ["Yes", "No"])
+    ApplicantIncome = st.number_input("Applicant Income", min_value=0.0, value=5000.0)
+
+with col2:
+    CoapplicantIncome = st.number_input("Coapplicant Income", min_value=0.0, value=0.0)
+    LoanAmount = st.number_input("Loan Amount", min_value=0.0, value=120.0)
+    Loan_Amount_Term = st.number_input("Loan Amount Term", min_value=1.0, value=360.0)
+    Credit_History = st.selectbox("Credit History", [1.0, 0.0])
+    Property_Area = st.selectbox("Property Area", ["Urban", "Semiurban", "Rural"])
+
+st.divider()
+
+if st.button("Predict Loan Status"):
     input_data = pd.DataFrame([{
-        "age": age,
-        "income": income,
-        "loan_amount": loan_amount,
-        "credit_score": credit_score,
-        "employment_years": employment_years,
-        "existing_debt": existing_debt,
-        "loan_term": loan_term,
-        "risk_level": risk_level
+        "Gender": Gender,
+        "Married": Married,
+        "Dependents": Dependents,
+        "Education": Education,
+        "Self_Employed": Self_Employed,
+        "ApplicantIncome": ApplicantIncome,
+        "CoapplicantIncome": CoapplicantIncome,
+        "LoanAmount": LoanAmount,
+        "Loan_Amount_Term": Loan_Amount_Term,
+        "Credit_History": Credit_History,
+        "Property_Area": Property_Area
     }])
+
+    # Encode categorical columns
+    for col in input_data.columns:
+        if col in label_encoders:
+            input_data[col] = label_encoders[col].transform(input_data[col])
+
+    input_data = input_data[model_columns]
 
     prediction = model.predict(input_data)[0]
     prediction_proba = model.predict_proba(input_data)[0]
 
-    if prediction == 1:
-        st.success("Loan Decision: Approved")
-    else:
-        st.error("Loan Decision: Rejected")
+    st.subheader("AI Decision")
 
-    st.write(f"Approval Confidence: {prediction_proba[1]:.2%}")
-    st.write(f"Rejection Confidence: {prediction_proba[0]:.2%}")
-# %%
+    if prediction == 1:
+        st.success("Loan Approved")
+    else:
+        st.error("Loan Rejected")
+
+    st.metric("Approval Confidence", f"{prediction_proba[1]:.2%}")
+    st.metric("Rejection Confidence", f"{prediction_proba[0]:.2%}")
+
+    st.subheader("Input Summary")
+    st.dataframe(input_data)
