@@ -12,7 +12,7 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("🏦 AI Loan Prediction & Risk Analysis System")
+st.title("AI Loan Prediction & Risk Analysis System")
 st.markdown(
     "An AI-powered system for predicting **loan approval status** using customer financial and demographic data."
 )
