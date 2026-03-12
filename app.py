@@ -9,7 +9,6 @@ label_encoders = joblib.load("models/label_encoders.pkl")
 
 st.set_page_config(
     page_title="AI Loan Prediction & Risk Analysis System",
-    page_icon="🏦",
     layout="wide"
 )
 
@@ -23,7 +22,7 @@ st.divider()
 left_col, right_col = st.columns(2)
 
 with left_col:
-    st.subheader("👤 Applicant Information")
+    st.subheader(" Applicant Information")
 
     gender = st.selectbox("Gender", ["Male", "Female"])
     married = st.selectbox("Married", ["Yes", "No"])
